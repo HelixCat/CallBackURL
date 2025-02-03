@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+    <meta charset="UTF-8">
+    <title>index</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
+</head>
+<body ng-controller="myCtrl">
+
+<div class="container">
+    <h1>Request List</h1>
+
+    <div ng-if="message" class="alert alert-success">{{ message }}</div>
+
+    <form ng-submit="addRequest()">
+        <div class="form-group">
+            <label for="owner">Owner:</label>
+            <input type="text" class="form-control" id="owner" ng-model="newRequest.owner" required>
+        </div>
+        <div class="form-group">
+            <label for="callbackURL">Callback URL:</label>
+            <input type="text" class="form-control" id="callbackURL" ng-model="newRequest.callbackURL" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Request</button>
+    </form>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Owner</th>
+            <th>Callback URL</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="request in requests">
+            <td>{{ request.id }}</td>
+            <td>{{ request.owner }}</td>
+            <td>{{ request.callbackURL }}</td>
+            <td>
+                <button class="btn btn-info cameBackBtn"
+                        ng-click="navigateToCallback(request.callbackURL + '?owner=' + request.owner)">
+                    Come Back
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const app = angular.module('myApp',);
+    app.controller('myCtrl', ['$scope', '$http', '$window', function($scope, $http, $window) {
+        $scope.newRequest = {};
+        $scope.message = undefined;
+        $scope.requests = undefined;
+
+        // Load requests on page load
+        $scope.loadRequests = function() {
+            $http.get('/api/requests/find-all').then(function(response) {
+                $scope.requests = response.data.requests; // Extract the requests from the response
+            });
+        };
+
+        $scope.addRequest = function() {
+            $http.post('/api/requests/add', $scope.newRequest).then(function(response) {
+                $scope.loadRequests(); // Reload the requests
+                $scope.newRequest = {}; // Clear the form
+                $scope.message = response.data.message; // Display the message
+            });
+        };
+
+        $scope.navigateToCallback = function(callbackUrl) {
+            $window.location.href = callbackUrl;
+        };
+
+        $scope.loadRequests(); // Call the function to load requests
+    }]);
+</script>
+
+</body>
+</html>
